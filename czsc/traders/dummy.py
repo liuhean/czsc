@@ -81,6 +81,7 @@ class DummyBacktest:
             return None
 
         for pos in trader.positions:
+
             try:
                 file_pairs = os.path.join(symbol_path, f"{pos.name}.pairs")
                 file_holds = os.path.join(symbol_path, f"{pos.name}.holds")

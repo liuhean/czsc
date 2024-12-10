@@ -258,7 +258,7 @@ def get_kline(symbol, period, start_time, end_time, count=-1, dividend_type="fro
     )
 
     df = pd.DataFrame({key: value.values[0] for key, value in data.items()})
-    df["time"] = pd.to_datetime(df["time"], unit="ms") + pd.to_timedelta("8H")
+    df["time"] = pd.to_datetime(df["time"], unit="ms") + pd.to_timedelta("8h")
     df.reset_index(inplace=True, drop=True)
     df["symbol"] = symbol
     df = df.dropna()
@@ -1332,8 +1332,10 @@ class QmtTradeManager:
 
 def test_get_kline():
     # 获取所有板块
+
     slt = xtdata.get_sector_list()
     stocks = xtdata.get_stock_list_in_sector("沪深A股")
+
 
     df = get_kline(
         symbol="000001.SZ", period="1m", count=1000, dividend_type="front", start_time="20200427", end_time="20221231"
