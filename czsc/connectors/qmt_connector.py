@@ -30,6 +30,14 @@ from xtquant import xtconstant
 from xtquant import xtdata
 from xtquant.xttrader import XtQuantTrader, XtQuantTraderCallback
 from xtquant.xttype import StockAccount
+from xtquant import xtdatacenter as xtdc
+
+xtdc.set_token("023e3df6a67bc8a775c261e81c1ee3364399b340")
+xtdc.set_data_home_dir(r'F:\qmt投研\data\datadir')
+xtdc.init(False)
+port = 58601
+xtdc.listen(port=port)
+print(f"服务启动,开放端口：{port}")
 
 dt_fmt = "%Y-%m-%d %H:%M:%S"
 
