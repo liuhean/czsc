@@ -251,7 +251,7 @@ def kline_pro(kline: List[dict],
                 symbol_size=25,
                 symbol='triangle',
                 label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color='#ff461f'),
+                itemstyle_opts=opts.ItemStyleOpts(color='#068f38'),
                 tooltip_opts=opts.TooltipOpts(
                     textstyle_opts=opts.TextStyleOpts(font_size=12),
                     formatter=JsCode("function (params) {return params.value[2];}")
@@ -265,7 +265,7 @@ def kline_pro(kline: List[dict],
                 symbol_size=25,
                 symbol='triangle',
                 label_opts=opts.LabelOpts(is_show=False),
-                itemstyle_opts=opts.ItemStyleOpts(color='#afdd22'),
+                itemstyle_opts=opts.ItemStyleOpts(color='#068f38'),
                 tooltip_opts=opts.TooltipOpts(
                     textstyle_opts=opts.TextStyleOpts(font_size=12),
                     formatter=JsCode("function (params) {return params.value[2];}")

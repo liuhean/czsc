@@ -6,8 +6,10 @@ create_dt: 2023/9/10 19:45
 describe: 30分钟笔非多即空策略
 """
 import czsc
+
 from pathlib import Path
 from loguru import logger
+
 # from czsc.connectors import research
 from czsc.connectors import qmt_connector as qmc
 from czsc import Event, Position
@@ -70,7 +72,7 @@ def create_long_short_V230909(symbol, **kwargs):
 
     https://czsc.readthedocs.io/en/latest/api/czsc.signals.cxt_bi_status_V230101.html
     """
-    base_freq = kwargs.get('base_freq', '30分钟')
+    base_freq = kwargs.get("base_freq", "30分钟")
 
     opens = [
         {
@@ -118,25 +120,25 @@ def create_long_short_V230909(symbol, **kwargs):
 class Strategy(czsc.CzscStrategyBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.is_stocks = kwargs.get('is_stocks', True)
+        self.is_stocks = kwargs.get("is_stocks", True)
 
     @property
     def positions(self):
         pos_list = [
             # create_long_short_V230908(self.symbol),
-            # create_long_short_V230909(self.symbol, base_freq='30分钟'),
-            # create_long_short_V230909(self.symbol, base_freq='60分钟'),
-            create_long_short_V230909(self.symbol, base_freq='日线'),
+            create_long_short_V230909(self.symbol, base_freq="5分钟"),
+            # create_long_short_V230909(self.symbol, base_freq="60分钟"),
+            # create_long_short_V230909(self.symbol, base_freq="日线"),
         ]
         return pos_list
 
 
-if __name__ == '__main__':
-    results_path = Path(r'D:\策略研究\笔非多即空')
+if __name__ == "__main__":
+    results_path = Path(r"D:\策略研究\笔非多即空")
     logger.add(results_path / "czsc.log", rotation="1 week", encoding="utf-8")
     results_path.mkdir(exist_ok=True, parents=True)
 
-    symbols = qmc.get_symbols('train')[:30]
+    symbols = qmc.get_symbols("train")[:30]
     symbol = symbols[0]
     # symbol = "000016.SH"
     tactic = Strategy(symbol=symbol, is_stocks=True)
@@ -146,12 +148,12 @@ if __name__ == '__main__':
     logger.info(f"信号函数配置列表：{tactic.signals_config}")
 
     # replay 查看策略的编写是否正确，执行过程是否符合预期
-    print('tactic:', tactic)
-    print('tactic.base_freq:', tactic.base_freq)
-    bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt='20240911', edt='20241210')
-    print('qmc.get_raw_bars:bars', bars)
+    print("tactic:", tactic)
+    print("tactic.base_freq:", tactic.base_freq)
+    bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt="20241111", edt="20241210")
+    print("qmc.get_raw_bars:bars", bars)
 
-    trader = tactic.replay(bars, sdt='20210101', res_path=results_path / "replay", refresh=True)
+    trader = tactic.replay(bars, sdt="20210101", res_path=results_path / "replay", refresh=True)
 
     # 当策略执行过程符合预期后，将持仓策略保存到本地 json 文件中
     tactic.save_positions(results_path / "positions")
