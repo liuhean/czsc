@@ -126,8 +126,8 @@ class Strategy(czsc.CzscStrategyBase):
     def positions(self):
         pos_list = [
             # create_long_short_V230908(self.symbol),
-            create_long_short_V230909(self.symbol, base_freq="5分钟"),
-            # create_long_short_V230909(self.symbol, base_freq="60分钟"),
+            # create_long_short_V230909(self.symbol, base_freq="5分钟"),
+            create_long_short_V230909(self.symbol, base_freq="60分钟"),
             # create_long_short_V230909(self.symbol, base_freq="日线"),
         ]
         return pos_list
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     # replay 查看策略的编写是否正确，执行过程是否符合预期
     print("tactic:", tactic)
     print("tactic.base_freq:", tactic.base_freq)
-    bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt="20241111", edt="20241210")
+    bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt="20240111", edt="20241210")
     print("qmc.get_raw_bars:bars", bars)
 
     trader = tactic.replay(bars, sdt="20210101", res_path=results_path / "replay", refresh=True)

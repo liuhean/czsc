@@ -33,9 +33,9 @@ from xtquant.xttype import StockAccount
 from xtquant import xtdatacenter as xtdc
 
 xtdc.set_token("023e3df6a67bc8a775c261e81c1ee3364399b340")
-xtdc.set_data_home_dir(r'F:\qmt投研\data\datadir')
+xtdc.set_data_home_dir(r"F:\qmt投研\data\datadir")
 xtdc.init(False)
-port = 58601
+port = 58602
 xtdc.listen(port=port)
 print(f"服务启动,开放端口：{port}")
 
@@ -315,7 +315,8 @@ def get_raw_bars(symbol, freq, sdt, edt, fq="前复权", **kwargs) -> List[RawBa
 
     kline["dt"] = pd.to_datetime(kline["time"])
     kline["vol"] = kline["volume"]
-    bars = resample_bars(kline, freq, raw_bars=True)
+    freq_map = {"1m": "1分钟", "5m": "5分钟", "1d": "日线"}
+    bars = resample_bars(kline, freq, raw_bars=True, base_freq=freq_map[period])
     return bars
 
 
@@ -1343,7 +1344,6 @@ def test_get_kline():
 
     slt = xtdata.get_sector_list()
     stocks = xtdata.get_stock_list_in_sector("沪深A股")
-
 
     df = get_kline(
         symbol="000001.SZ", period="1m", count=1000, dividend_type="front", start_time="20200427", end_time="20221231"

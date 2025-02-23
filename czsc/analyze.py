@@ -303,7 +303,7 @@ class CZSC:
         # 如果有信号计算函数，则进行信号计算
         self.signals = self.get_signals(c=self) if self.get_signals else OrderedDict()
 
-    def to_echarts(self, width: str = "1400px", height: str = '580px', bs=[]):
+    def to_echarts(self, width: str = "1400px", height: str = '980px', bs=[]):
         """绘制K线分析图
 
         :param width: 宽

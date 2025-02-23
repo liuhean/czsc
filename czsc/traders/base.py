@@ -92,13 +92,13 @@ class CzscSignals:
 
         for param in self.signals_config:
             param = dict(param)
-            sig_name = param.pop('name')
+            sig_name = param.pop("name")
             sig_func = import_by_name(sig_name) if isinstance(sig_name, str) else sig_name
 
-            freq = param.pop('freq', None)
-            if freq in self.kas:    # 如果指定了 freq，那么就使用 CZSC 对象作为输入
+            freq = param.pop("freq", None)
+            if freq in self.kas:  # 如果指定了 freq，那么就使用 CZSC 对象作为输入
                 s.update(sig_func(self.kas[freq], **param))
-            else:                   # 否则使用 CAT 作为输入
+            else:  # 否则使用 CAT 作为输入
                 s.update(sig_func(self, **param))
         return s
 
@@ -189,8 +189,14 @@ class CzscSignals:
         self.s.update(last_bar.__dict__)
 
 
-def generate_czsc_signals(bars: List[RawBar], signals_config: List[dict],
-                          sdt: Union[AnyStr, datetime] = "20170101", init_n: int = 500, df=False, **kwargs):
+def generate_czsc_signals(
+    bars: List[RawBar],
+    signals_config: List[dict],
+    sdt: Union[AnyStr, datetime] = "20170101",
+    init_n: int = 500,
+    df=False,
+    **kwargs,
+):
     """使用 CzscSignals 生成信号
 
     函数执行逻辑：
@@ -218,13 +224,13 @@ def generate_czsc_signals(bars: List[RawBar], signals_config: List[dict],
     """
     freqs = get_signals_freqs(signals_config)
     freqs = [freq for freq in freqs if freq != bars[0].freq.value]
-    sdt = pd.to_datetime(sdt)                       # type: ignore
-    bars_left = [x for x in bars if x.dt < sdt]     # type: ignore
+    sdt = pd.to_datetime(sdt)  # type: ignore
+    bars_left = [x for x in bars if x.dt < sdt]  # type: ignore
     if len(bars_left) <= init_n:
         bars_left = bars[:init_n]
         bars_right = bars[init_n:]
     else:
-        bars_right = [x for x in bars if x.dt >= sdt]   # type: ignore
+        bars_right = [x for x in bars if x.dt >= sdt]  # type: ignore
 
     if len(bars_right) == 0:
         logger.warning("右侧K线为空，无法进行信号生成", category=RuntimeWarning)
@@ -240,8 +246,8 @@ def generate_czsc_signals(bars: List[RawBar], signals_config: List[dict],
 
     _sigs = []
     cs = CzscSignals(bg, signals_config=signals_config, **kwargs)
-    cs.cache.update({'gsc_kwargs': kwargs})
-    for bar in tqdm(bars_right, desc=f'generate signals of {bg.symbol}'):
+    cs.cache.update({"gsc_kwargs": kwargs})
+    for bar in tqdm(bars_right, desc=f"generate signals of {bg.symbol}"):
         cs.update_signals(bar)
         _sigs.append(dict(cs.s))
 
@@ -281,7 +287,7 @@ def check_signals_acc(bars: List[RawBar], signals_config: List[dict], delta_days
     s_cols = [x for x in df.columns if len(x.split("_")) == 3]
     signals = []
     for col in s_cols:
-        print('=' * 100, "\n", df[col].value_counts())
+        print("=" * 100, "\n", df[col].value_counts())
         signals.extend([Signal(f"{col}_{v}") for v in df[col].unique() if "其他" not in v])
 
     print(f"signals: {'+' * 100}")
@@ -298,7 +304,7 @@ def check_signals_acc(bars: List[RawBar], signals_config: List[dict], delta_days
     ct = CzscSignals(bg, signals_config=signals_config, **kwargs)
     last_dt = {signal.key: ct.end_dt for signal in signals}
 
-    for bar in tqdm(bars_right, desc=f'signals of {bg.symbol}'):
+    for bar in tqdm(bars_right, desc=f"signals of {bg.symbol}"):
         ct.update_signals(bar)
 
         for signal in signals:
@@ -342,8 +348,13 @@ def get_unique_signals(bars: List[RawBar], signals_config: List[dict], **kwargs)
 class CzscTrader(CzscSignals):
     """缠中说禅技术分析理论之多级别联立交易决策类（支持多策略独立执行）"""
 
-    def __init__(self, bg: Optional[BarGenerator] = None, positions: Optional[List[Position]] = None,
-                 ensemble_method: Union[AnyStr, Callable] = "mean", **kwargs):
+    def __init__(
+        self,
+        bg: Optional[BarGenerator] = None,
+        positions: Optional[List[Position]] = None,
+        ensemble_method: Union[AnyStr, Callable] = "mean",
+        **kwargs,
+    ):
         """
 
         初始化逻辑：
@@ -412,8 +423,8 @@ class CzscTrader(CzscSignals):
         :return: None
         """
         self.s = sig
-        self.symbol, self.end_dt = self.s['symbol'], self.s['dt']
-        self.bid, self.latest_price = self.s['id'], self.s['close']
+        self.symbol, self.end_dt = self.s["symbol"], self.s["dt"]
+        self.bid, self.latest_price = self.s["id"], self.s["close"]
         if self.positions:
             for position in self.positions:
                 position.update(self.s)
@@ -474,11 +485,11 @@ class CzscTrader(CzscSignals):
             method = method.lower()
             pos_seq = [x.pos for x in self.positions]
 
-            if method == 'mean':
+            if method == "mean":
                 pos = np.mean(pos_seq)
-            elif method == 'vote':
+            elif method == "vote":
                 pos = np.sign(sum(pos_seq))
-            elif method == 'max':
+            elif method == "max":
                 pos = max(pos_seq)
             else:
                 raise ValueError
@@ -510,7 +521,7 @@ class CzscTrader(CzscSignals):
 
         return None
 
-    def take_snapshot(self, file_html=None, width: str = "1400px", height: str = "580px"):
+    def take_snapshot(self, file_html=None, width: str = "1400px", height: str = "980px"):
         """获取快照
 
         :param file_html: 交易快照保存的 html 文件名
@@ -527,9 +538,9 @@ class CzscTrader(CzscSignals):
                 bs = []
                 for pos in self.positions:
                     for op in pos.operates:
-                        if op['dt'] >= ka.bars_raw[0].dt:
+                        if op["dt"] >= ka.bars_raw[0].dt:
                             _op = dict(op)
-                            _op['op_desc'] = f"{pos.name} | {_op['op_desc']}"
+                            _op["op_desc"] = f"{pos.name} | {_op['op_desc']}"
                             bs.append(_op)
 
             chart = ka.to_echarts(width, height, bs)
@@ -578,6 +589,7 @@ class CzscTrader(CzscSignals):
             columns = ['dt', 'symbol', 'weight', 'price']
         """
         from czsc.traders.weight_backtest import get_ensemble_weight
+
         method = self.__ensemble_method if not method else method
         return get_ensemble_weight(self, method)
 
