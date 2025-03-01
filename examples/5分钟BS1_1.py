@@ -76,9 +76,9 @@ class Strategy(czsc.CzscStrategyBase):
 
 
 if __name__ == "__main__":
-    results_path = Path(r"D:\策略研究\5分钟BS1")
-    logger.add(results_path / "czsc.log", rotation="1 week", encoding="utf-8")
-    results_path.mkdir(exist_ok=True, parents=True)
+    # results_path = Path(r"D:\策略研究\5分钟BS1")
+    # logger.add(results_path / "czsc.log", rotation="1 week", encoding="utf-8")
+    # results_path.mkdir(exist_ok=True, parents=True)
 
     symbols = qmc.get_symbols("train")[:30]
     symbol = symbols[0]
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt="20240811", edt="20241210")
     # print("qmc.get_raw_bars:bars", bars)
 
-    trader = tactic.replay(bars, sdt="20210101", res_path=results_path / "replay", refresh=True)
+    # trader = tactic.replay(bars, sdt="20210101", res_path=results_path / "replay", refresh=True)
 
     # 当策略执行过程符合预期后，将持仓策略保存到本地 json 文件中
-    tactic.save_positions(results_path / "positions")
+    # tactic.save_positions(results_path / "positions")

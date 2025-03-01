@@ -415,10 +415,19 @@ class TraderCallback(XtQuantTraderCallback):
 
     def push_message(self, msg: str, msg_type="text"):
         """批量推送消息"""
-        try:
-            push_text(msg, "7da5a3f1-c88b-4f1b-b560-ceb448ec6433")
-        except Exception as e:
-            self.logger.error(f"推送消息失败：{e}")
+        if self.im and self.members:
+            for member in self.members:
+                try:
+                    if msg_type == "text":
+                        self.im.send_text(msg, member)
+                    elif msg_type == "image":
+                        self.im.send_image(msg, member)
+                    elif msg_type == "file":
+                        self.im.send_file(msg, member)
+                    else:
+                        self.logger.error(f"不支持的消息类型：{msg_type}")
+                except Exception as e:
+                    self.logger.error(f"推送消息失败：{e}")
 
     def on_disconnected(self):
         """连接断开"""
@@ -1272,7 +1281,7 @@ class QmtTradeManager:
 
         file_docx = f"QMT{self.account_id}_交易报告_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
         writer.save(file_docx)
-        # self.callback.push_message(file_docx, msg_type="file")
+        self.callback.push_message(file_docx, msg_type="file")
         os.remove(file_docx)
 
     def run(self, mode="30m", order_timeout=120):
