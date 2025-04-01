@@ -223,7 +223,7 @@ class CzscStrategyBase(ABC):
         for position in trader.positions:
             pos_path = os.path.join(res_path, position.name)
             os.makedirs(pos_path, exist_ok=exist_ok)
-
+            
         for bar in bars2:
             trader.on_bar(bar)
             for position in trader.positions:
@@ -252,6 +252,79 @@ class CzscStrategyBase(ABC):
         except Exception as e:
             logger.error(f"交易对象保存失败：{e}；通常的原因是交易对象中包含了不支持序列化的对象，比如函数")
         return trader
+
+    def replayCustom(self, bars: List[RawBar], res_path, **kwargs):
+        """交易策略交易过程回放
+
+        函数执行逻辑：
+
+        - 该方法用于交易策略交易过程的回放。它接受基础周期的K线数据、结果目录以及额外的关键字参数作为输入。
+        - 首先，它检查refresh参数，如果为True，则使用shutil.rmtree删除已存在的结果目录。
+        - 然后，它检查结果目录是否已存在，并且是否允许覆盖。如果目录已存在且不允许覆盖，则记录一条警告信息并返回。
+        - 通过调用os.makedirs创建结果目录，确保目录的存在。
+        - 接着，调用init_bar_generator方法初始化BarGenerator对象，并进行相关的初始化操作。
+        - 创建一个CzscTrader对象，并将初始化好的BarGenerator对象、持仓策略的深拷贝、交易信号配置的深拷贝等参数传递给CzscTrader的构造函数。
+        - 为每个持仓策略创建相应的目录。
+        - 遍历K线数据，调用trader.on_bar(bar)方法处理每一根K线数据。
+        - 在每根K线数据处理完成后，检查每个持仓策略是否有操作，并且操作的时间是否与当前K线的时间一致。
+            如果有操作，则生成相应的HTML文件名，并调用trader.take_snapshot(file_html)方法生成交易快照。
+        - 最后，遍历每个持仓策略，记录其评估信息，包括多空合并表现、多头表现、空头表现等。
+
+        :param bars: 基础周期K线
+        :param res_path: 结果目录
+        :param kwargs:
+
+            bg          已经初始化好的BarGenerator对象，如果传入了bg，则忽略sdt和n参数
+            sdt         初始化开始日期
+            n           初始化最小K线数量
+            refresh     是否刷新结果目录
+        :return:
+        """
+        if kwargs.get("refresh", False):
+            shutil.rmtree(res_path, ignore_errors=True)
+
+        exist_ok = kwargs.get("exist_ok", False)
+        if os.path.exists(res_path) and not exist_ok:
+            logger.warning(f"结果文件夹存在且不允许覆盖：{res_path}，如需执行，请先删除文件夹")
+            return
+        os.makedirs(res_path, exist_ok=exist_ok)
+
+        bg, bars2 = self.init_bar_generator(bars, **kwargs)
+        trader = CzscTrader(bg=bg, positions=deepcopy(self.positions),  # type: ignore
+                            signals_config=deepcopy(self.signals_config), **kwargs)
+        for position in trader.positions:
+            pos_path = os.path.join(res_path, position.name)
+            os.makedirs(pos_path, exist_ok=exist_ok)
+
+        for bar in bars2:
+            trader.on_bar(bar)
+            for position in trader.positions:
+                pos_path = os.path.join(res_path, position.name)
+
+                if position.operates and position.operates[-1]["dt"] == bar.dt:
+                    op = position.operates[-1]
+                    _dt = op["dt"].strftime("%Y%m%d#%H%M")
+                    file_name = f"{_dt}_{op['op'].value}_{op['bid']}_{x_round(op['price'], 2)}_{op['op_desc']}.html"
+                    # file_html = os.path.join(pos_path, file_name)
+                    # trader.take_snapshot(file_html)
+                    # logger.info(f"{file_html}")
+                    logger.info(f"{file_name}")
+
+        for position in trader.positions:
+            logger.info(
+                f"{position.name}  "
+                f"\n 多空合并：{position.evaluate()} "
+                f"\n 多头表现：{position.evaluate('多头')} "
+                f"\n 空头表现：{position.evaluate('空头')}"
+            )
+
+        file_trader = os.path.join(res_path, "trader.ct")
+        try:
+            dill_dump(trader, file_trader)
+            logger.info(f"交易对象保存到：{file_trader}")
+        except Exception as e:
+            logger.error(f"交易对象保存失败：{e}；通常的原因是交易对象中包含了不支持序列化的对象，比如函数")
+        return trader, bg, bars2
 
     def check(self, bars: List[RawBar], res_path, **kwargs):
         """检查交易策略中的信号是否正确

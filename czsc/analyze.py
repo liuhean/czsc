@@ -346,7 +346,7 @@ class CZSC:
             kline.add_scatter_indicator(bi['dt'], bi['bi'], name="笔", text=bi['text'], row=1, line_width=2)
         return kline.fig
 
-    def open_in_browser(self, width: str = "1400px", height: str = '580px'):
+    def open_in_browser(self, width: str = "1400px", height: str = '980px'):
         """直接在浏览器中打开分析结果
 
         :param width: 图表宽度

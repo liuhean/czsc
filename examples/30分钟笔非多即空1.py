@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     symbols = qmc.get_symbols("train")[:30]
     symbol = symbols[0]
-    # symbol = "000016.SH"
+    symbol = "AP2505.ZF"
     tactic = Strategy(symbol=symbol, is_stocks=True)
 
     # 使用 logger 记录策略的基本信息
@@ -148,10 +148,7 @@ if __name__ == "__main__":
     logger.info(f"信号函数配置列表：{tactic.signals_config}")
 
     # replay 查看策略的编写是否正确，执行过程是否符合预期
-    print("tactic:", tactic)
-    print("tactic.base_freq:", tactic.base_freq)
     bars = qmc.get_raw_bars(symbol, freq=tactic.base_freq, sdt="20240111", edt="20241210")
-    print("qmc.get_raw_bars:bars", bars)
 
     trader = tactic.replay(bars, sdt="20210101", res_path=results_path / "replay", refresh=True)
 
