@@ -303,7 +303,6 @@ def check_signals_acc(bars: List[RawBar], signals_config: List[dict], delta_days
 
     ct = CzscSignals(bg, signals_config=signals_config, **kwargs)
     last_dt = {signal.key: ct.end_dt for signal in signals}
-
     for bar in tqdm(bars_right, desc=f"signals of {bg.symbol}"):
         ct.update_signals(bar)
 
@@ -316,6 +315,69 @@ def check_signals_acc(bars: List[RawBar], signals_config: List[dict], delta_days
                 print(file_html)
                 ct.take_snapshot(file_html, height=kwargs.get("height", "680px"))
                 last_dt[signal.key] = bar.dt
+
+
+def check_signals_acc_custom(bars: List[RawBar], signals_config: List[dict], delta_days: int = 5, **kwargs) -> None:
+    """输入基础周期K线和想要验证的信号，输出信号识别结果的快照
+
+    函数执行逻辑：
+
+    1. 函数首先获取基础周期K线的base_freq，并检查输入的K线数据bars是否按时间升序排列。如果bars的长度小于600，函数直接返回。
+    2. 然后，函数调用generate_czsc_signals方法，生成Czsc信号，并将结果保存在df中。
+    3. 函数提取出df中所有的信号列s_cols，并打印每一列的值的数量。然后，函数将所有的信号添加到signals列表中。
+    4. 函数将bars分为两部分，bars_left和bars_right，并获取信号配置signals_config中的所有freqs。
+    5. 函数创建一个BarGenerator对象bg，并使用bars_left中的K线数据来初始化它。
+    6. 函数创建一个CzscSignals对象ct，并将bg和信号配置signals_config作为参数传入。
+    7. 函数创建一个字典last_dt，用于存储每一个信号最后一次出现的时间。
+    8. 函数遍历bars_right中的每一根K线，对于每一根K线，函数调用ct.update_signals(bar)来更新信号。
+    9. 对于每一个信号，如果当前K线的时间与该信号最后一次出现的时间的差值大于delta_days，并且该信号与当前的信号匹配，
+       函数将创建一个HTML文件，保存信号识别结果的快照，并更新该信号最后一次出现的时间。
+
+    :param bars: 原始K线
+    :param signals_config: 需要验证的信号列表
+    :param delta_days: 两次相同信号之间的间隔天数
+    :return: None
+    """
+    base_freq = str(bars[-1].freq.value)
+    assert bars[2].dt > bars[1].dt > bars[0].dt and bars[2].id > bars[1].id, "bars 中的K线元素必须按时间升序"
+    if len(bars) < 600:
+        return
+
+    df = generate_czsc_signals(bars, signals_config=signals_config, df=True, **kwargs)
+    s_cols = [x for x in df.columns if len(x.split("_")) == 3]
+    signals = []
+    for col in s_cols:
+        print("=" * 100, "\n", df[col].value_counts())
+        signals.extend([Signal(f"{col}_{v}") for v in df[col].unique() if "其他" not in v])
+
+    print(f"signals: {'+' * 100}")
+    for row in signals:
+        print(f"- {row}")
+
+    bars_left = bars[:500]
+    bars_right = bars[500:]
+    freqs = get_signals_freqs(signals_config)
+    bg = BarGenerator(base_freq=base_freq, freqs=freqs, max_count=5000)
+    for bar in bars_left:
+        bg.update(bar)
+
+    ct = CzscSignals(bg, signals_config=signals_config, **kwargs)
+    last_dt = {signal.key: ct.end_dt for signal in signals}
+    print("ct", ct)
+    for bar in tqdm(bars_right, desc=f"signals of {bg.symbol}"):
+        ct.update_signals(bar)
+
+        for signal in signals:
+            html_path = os.path.join(home_path, signal.key)
+            os.makedirs(html_path, exist_ok=True)
+            if bar.dt - last_dt[signal.key] > timedelta(days=delta_days) and signal.is_match(ct.s):
+                file_html = f"{bar.symbol}_{bar.dt.strftime('%Y%m%d_%H%M')}_{signal.key}_{ct.s[signal.key]}.html"
+                file_html = os.path.join(html_path, file_html)
+                print(file_html)
+                # ct.take_snapshot(file_html, height=kwargs.get("height", "680px"))
+                last_dt[signal.key] = bar.dt
+
+    return ct, bars_left, bars_right
 
 
 def get_unique_signals(bars: List[RawBar], signals_config: List[dict], **kwargs):

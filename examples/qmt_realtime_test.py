@@ -6,7 +6,11 @@ create_dt: 2023/3/5 10:08
 describe: QMT实时交易
 """
 from czsc.connectors import qmt_connector as qmc
-from czsc.strategies import CzscStrategyExample2
+
+# from czsc.strategies import CzscStrategyExample2
+from examples.test_qmt_stratery_ import Strategy
+
+# from my_flask.feature_api.qmt_freq_strategy import Strategy
 
 
 def get_index_members(index_code="000852.SH", trade_date="20230131"):
@@ -25,17 +29,17 @@ gjm = {
     # mini qmt 目录
     "mini_qmt_dir": "D:\\东莞证券QMT模拟交易端\\userdata_mini",
     # 账户id
-    "account_id": "2008013559",
+    "account_id": "2076001528",
     # 设定实盘交易的股票池
-    "symbols": qmc.get_symbols("train")[:30],
+    "symbols": qmc.get_symbols("train")[:100],
     # 单个股票的最大持仓比例
-    "symbol_max_pos": 0.2,
+    "symbol_max_pos": 0.05,
     # CzscTrader初始交易开始的时间，这个时间之后的交易都会被缓存在对象中
-    "trade_sdt": "20230101",
+    "trade_sdt": "20250501",
     # update trader时，K线获取的天数
     "delta_days": 1,
     # 交易策略
-    "strategy": CzscStrategyExample2,
+    "strategy": Strategy,
     # TraderCallback 回调类的参数
     "callback_params": {
         # 飞书推送配置【不配置也没有影响】

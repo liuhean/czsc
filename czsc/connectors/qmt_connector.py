@@ -34,11 +34,12 @@ from xtquant.xttrader import XtQuantTrader, XtQuantTraderCallback
 from xtquant.xttype import StockAccount
 from xtquant import xtdatacenter as xtdc
 
-xtdc.set_token("023e3df6a67bc8a775c261e81c1ee3364399b340")
-xtdc.set_data_home_dir(r"F:\qmt投研\data\datadir")
-xtdc.init(False)
-xtlistendata = xtdc.listen(port=(58610, 58650))
-print(f"服务启动,开放端口：{xtlistendata}")
+#
+# xtdc.set_token("023e3df6a67bc8a775c261e81c1ee3364399b340")
+# xtdc.set_data_home_dir(r"F:\qmt投研\data\datadir")
+# xtdc.init(False)
+# xtlistendata = xtdc.listen(port=(58610, 58650))
+# print(f"服务启动,开放端口：{xtlistendata}")
 
 dt_fmt = "%Y-%m-%d %H:%M:%S"
 
@@ -330,17 +331,37 @@ def get_symbols(step):
     stocks = xtdata.get_stock_list_in_sector("沪深A股")
     stocks_map = {
         "index": [
-            "000905.SH",
-            "000016.SH",
-            "000300.SH",
-            "000001.SH",
-            "000852.SH",
-            "399001.SZ",
-            "399006.SZ",
-            "399376.SZ",
-            "399377.SZ",
-            "399317.SZ",
-            "399303.SZ",
+            "300346.SZ",
+            "603199.SH",
+            "601628.SH",
+            "688041.SH",
+            "603019.SH",
+            "601398.SH",
+            "601857.SH",
+            "600809.SH",
+            "600050.SH",
+            "600519.SH",
+            "600096.SH",
+            "000568.SZ",
+            "000999.SZ",
+            "600276.SH",
+            "600600.SH",
+            "002294.SZ",
+            "002821.SZ",
+            "601899.SH",
+            "600547.SH",
+            "002600.SZ",
+            "000768.SZ",
+            "601989.SH",
+            "603986.SH",
+            "601800.SH",
+            "688111.SH",
+            "002304.SZ",
+            "300059.SZ",
+            "300999.SZ",
+            "002236.SZ",
+            "600887.SH",
+            "002129.SZ",
         ],
         "stock": stocks,
         "check": ["000001.SZ"],
@@ -1102,7 +1123,7 @@ class QmtTradeManager:
             order_volume = order_volume // 100 * 100
 
         assert self.xtt.connected, "交易服务器连接断开"
-        _id = self.xtt.order_stock(
+        _id = self.xtt.order_stock_async(
             self.acc, stock_code, order_type, int(order_volume), price_type, price, strategy_name, order_remark
         )
         return _id
@@ -1132,11 +1153,20 @@ class QmtTradeManager:
                             assets = self.get_assets()
                             order_volume = min(self.symbol_max_pos * assets.total_asset, assets.cash) // news[-1].close
                             self.send_stock_order(stock_code=symbol, order_type=23, order_volume=order_volume)
+                            # file_name = f"{_dt}_{op['op'].value}_{op['bid']}_{x_round(op['price'], 2)}_{op['op_desc']}.html"
+                            # 当前时间
+                            _dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            print(f"trader：{trader} {symbol} trader pos：{trader.get_ensemble_pos('mean')}")
+                            file_html = os.path.join(self.cache_path, f"{symbol}_{_dt}_买.html")
+                            trader.take_snapshot(file_html)
 
                         # 平多头
                         if trader.get_ensemble_pos(method="vote") == 0 and self.is_allow_exit(symbol):
                             order_volume = holds[symbol].can_use_volume
                             self.send_stock_order(stock_code=symbol, order_type=24, order_volume=order_volume)
+                            _dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            file_html = os.path.join(self.cache_path, f"{symbol}_{_dt}_卖.html")
+                            trader.take_snapshot(file_html)
 
                 else:
                     self.logger.info(f"{symbol} 没有需要更新的K线，最新的K线时间是 {trader.end_dt}")
@@ -1272,13 +1302,64 @@ class QmtTradeManager:
         file_docx = f"QMT{self.account_id}_交易报告_{datetime.now().strftime('%Y%m%d_%H%M')}.docx"
         writer.save(file_docx)
         # self.callback.push_message(file_docx, msg_type="file")
-        os.remove(file_docx)
+        # os.remove(file_docx)
 
     def run(self, mode="30m", order_timeout=120):
         """运行策略"""
         self.report()
 
-        if mode.lower() == "15m":
+        if mode.lower() == "5m":
+            _times = [
+                "09:35",
+                "09:40",
+                "09:45",
+                "09:50",
+                "09:55",
+                "10:00",
+                "10:05",
+                "10:10",
+                "10:15",
+                "10:20",
+                "10:25",
+                "10:30",
+                "10:35",
+                "10:40",
+                "10:45",
+                "10:50",
+                "10:55",
+                "11:00",
+                "11:05",
+                "11:10",
+                "11:15",
+                "11:20",
+                "11:25",
+                "11:30",
+                "13:05",
+                "13:10",
+                "13:15",
+                "13:20",
+                "13:25",
+                "13:30",
+                "13:35",
+                "13:40",
+                "13:45",
+                "13:50",
+                "13:55",
+                "14:00",
+                "14:05",
+                "14:10",
+                "14:15",
+                "14:20",
+                "14:25",
+                "14:30",
+                "14:35",
+                "14:40",
+                "14:45",
+                "14:50",
+                "14:55",
+                "15:00",
+            ]
+        elif mode.lower() == "15m":
             _times = [
                 "09:45",
                 "10:00",
@@ -1302,20 +1383,26 @@ class QmtTradeManager:
         elif mode.lower() == "60m":
             _times = ["10:30", "11:30", "13:45", "14:30"]
         else:
-            raise ValueError("mode 只能是 15m, 30m, 60m")
+            raise ValueError("mode 只能是 5m, 15m, 30m, 60m")
 
         while 1:
             now_dt = datetime.now().strftime("%H:%M")
             self.cancel_timeout_orders(minutes=order_timeout)
 
+            # 只在14:00之后才执行策略更新
+            current_hour = int(now_dt.split(":")[0])
+
             if is_trade_day() and now_dt in _times:
+                if mode.lower() == "5m" and current_hour < 14:
+                    time.sleep(3)
+                    continue
+
                 self.update_traders()
                 self.report()
                 time.sleep(60)
             else:
                 time.sleep(3)
 
-            # 如果断开，重新连接交易服务器
             if not self.xtt.connected:
                 self.xtt.connect()
                 self.xtt.start()
